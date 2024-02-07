@@ -1,0 +1,27 @@
+name: migrate_users
+
+on:
+  schedule:
+    # UTC时间20点执行，对应中国时间第二天的04点
+    - cron: '0 20 * * *'
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+ 
+jobs:
+  migrateUsers:
+    runs-on: ubuntu-latest
+    environment: 
+      name: prod
+    steps:
+      - name: migrateUsers
+        env:
+          MIGRATE_USERS_URL: ${{ secrets.MIGRATE_USERS_URL }} # 将机密设置为环境变量
+        run: |
+          RESPONSE=$(curl -s "$MIGRATE_USERS_URL")
+          echo "$RESPONSE" > result.txt
+          date +"%Y-%m-%d %H:%M:%S" >> result.txt
+      - name: upload result to GitHub
+        uses: actions/upload-artifact@v2
+        with:
+          name: migrate-users-result
+          path: result.txt
